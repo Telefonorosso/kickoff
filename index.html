@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Build the L2Boot USB 2 MiB Extended Kickstart ROM locally in your browser.">
+  <title>L2Boot USB — 2 MiB ROM Builder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">L2BOOT USB · ROMSAFE v43r115</p>
+      <h1>2 MiB ROM Builder</h1>
+      <p class="lede">Build the Emu68 Extended Kickstart image entirely in your browser. Your Kickstart file is never sent to GitHub or to any server.</p>
+      <div class="privacy"><span class="dot"></span><strong>Local processing:</strong> selected files stay inside this browser tab.</div>
+    </header>
+
+    <section class="card">
+      <div class="step">1</div>
+      <div class="content">
+        <h2>Select your Kickstart</h2>
+        <p>Plain, unencrypted 512 KiB A1200 Kickstart 3.1 <strong>40.68</strong>. The builder applies amitools' <code>1mb_rom</code> patch locally.</p>
+        <label class="filebox">
+          <input id="kickInput" type="file" accept=".rom,.bin,application/octet-stream">
+          <span id="kickLabel">Choose Kickstart 40.68…</span>
+        </label>
+        <div id="kickInfo" class="hint">Expected size: 524,288 bytes.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="step">2</div>
+      <div class="content">
+        <div class="row-head">
+          <div>
+            <h2>L2Boot Extended ROM</h2>
+            <p>The GitHub Page normally loads the redistributable 512 KiB Extended ROM automatically.</p>
+          </div>
+          <span id="extBadge" class="badge neutral">checking…</span>
+        </div>
+
+        <div id="extStatePanel" class="subpanel state-panel">
+          <div class="state-line">
+            <span id="extStateIcon" class="state-icon">…</span>
+            <div>
+              <strong id="extStateTitle">Checking bundled Extended ROM…</strong>
+              <div id="hostedExtInfo" class="hint">assets/l2boot-ext-full.rom</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="localExtPanel" class="subpanel hidden">
+          <p class="compact"><strong>Manual fallback.</strong> Choose a previously built <code>l2boot-ext-full.rom</code> (512 KiB).</p>
+          <label class="filebox small">
+            <input id="extInput" type="file" accept=".rom,.bin,application/octet-stream">
+            <span id="extLabel">Choose l2boot-ext-full.rom…</span>
+          </label>
+
+          <details class="advanced-fallback">
+            <summary>Advanced: build the Extended ROM from three modules</summary>
+            <p class="compact">Use this only when a prebuilt Extended ROM is not available. The three files stay local and <code>romtool build -t ext</code> runs in-browser.</p>
+            <div class="grid3">
+              <label class="filebox small"><input id="ptableInput" type="file"><span id="ptableLabel">ptable.library…</span></label>
+              <label class="filebox small"><input id="devInput" type="file"><span id="devLabel">l2scsi.device…</span></label>
+              <label class="filebox small"><input id="bootInput" type="file"><span id="bootLabel">l2remote.boot…</span></label>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="card build-card">
+      <div class="step">3</div>
+      <div class="content">
+        <h2>Build the 2 MiB image</h2>
+        <p>The output layout matches the hardware-validated milestone:</p>
+        <div class="layoutbar" aria-label="2 MiB ROM layout">
+          <div class="seg ext"><b>0x000000</b><span>Extended ROM · 512 KiB</span></div>
+          <div class="seg pad"><b>0x080000</b><span>FF padding · 1 MiB</span></div>
+          <div class="seg kick"><b>0x180000</b><span>patched Kickstart · 512 KiB</span></div>
+        </div>
+        <button id="buildButton" class="primary" disabled>Build ROM</button>
+        <div id="status" class="status" role="status">Select a Kickstart to begin.</div>
+        <div id="result" class="result hidden">
+          <div><span>Output</span><strong id="outputName"></strong></div>
+          <div><span>Size</span><strong>2,097,152 bytes</strong></div>
+          <div><span>SHA-256</span><code id="outputHash"></code></div>
+          <button id="downloadButton" class="download">Download ROM</button>
+        </div>
+      </div>
+    </section>
+
+    <details class="notes">
+      <summary>What happens inside the browser?</summary>
+      <p>The page loads Pyodide and the authenticated official <code>amitools 0.8.1</code> source archive from PyPI (no wheel installation is required). It places your selected files in Pyodide's temporary in-memory filesystem, runs the same <code>romtool patch … 1mb_rom</code> and, when needed, <code>romtool build -t ext</code> operations used by the command-line milestone, then assembles the final 2 MiB byte image. Only Pyodide, the official amitools source archive, and an optional public Extended ROM are fetched over the network; your selected ROM/module bytes are not transmitted.</p>
+    </details>
+
+    <footer>
+      <span>L2Boot USB · browser builder</span>
+      <span id="engineState">engine not loaded</span>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
